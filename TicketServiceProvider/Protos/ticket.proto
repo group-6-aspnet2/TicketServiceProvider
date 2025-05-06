@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+option csharp_namespace = "TicketServiceProvider";
+
+package ticket;
+
+service TicketManager {
+  rpc CreateTickets (CreateTicketsRequest) returns (CreateTicketsReply);
+  rpc GetTickets (GetTicketsRequest) returns (GetTicketsReply);
+  rpc GetTicketsByBookingId (GetTicketsByBookingIdRequest) returns (GetTicketsByBookingIdReply);
+  rpc DeleteTicketsByBookingId (DeleteTicketsByBookingIdRequest) returns (DeleteTicketsByBookingIdReply);
+}
+
+message CreateTicketsRequest {
+	string event_name = 1;
+	string event_date = 2;
+	string event_time = 3;
+	string event_location = 4;
+	string event_category_name = 5;
+	int32 ticket_quantity = 6;
+	int32 ticket_category_name = 7;
+	string first_name = 8;
+	string last_name = 9;
+	string invoice_id = 10;
+}
+  
+message Ticket {
+	string ticket_id = 1;
+	string event_name = 2;
+	string event_date = 3;
+	string event_time = 4;
+	string event_location = 5;
+	string event_category_name = 6;
+	int32 ticket_quantity = 7;
+	int32 ticket_category_name = 8;
+	string first_name = 9;
+	string last_name = 10;
+	string seat_number = 11;
+	string gate = 12;
+	string booking_id = 13;
+	string invoice_id = 14;
+
+}
+
+
+message CreateTicketsReply {
+	bool succeeded = 1;
+	string message = 2;
+	repeated Ticket tickets = 3;
+}
+
+message GetTicketsRequest {
+}
+
+message GetTicketsReply{
+	bool succeeded = 1;
+	string message = 2;
+	repeated Ticket tickets = 3;
+}
+
+message GetTicketsByBookingIdRequest{
+	string booking_id = 1;
+}
+
+message GetTicketsByBookingIdReply{
+	bool succeeded = 1;
+	string message = 2;
+	repeated Ticket tickets = 3;
+}
+
+message DeleteTicketsByBookingIdRequest{
+	string booking_id = 1;
+	int32 ticket_quantity_to_remove = 2;
+}
+
+message DeleteTicketsByBookingIdReply {
+	bool succeeded = 1;
+	string message = 2;
+	repeated Ticket ticketsForBookingLeft = 3;
+}
