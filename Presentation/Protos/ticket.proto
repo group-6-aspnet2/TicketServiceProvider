@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "TicketServiceProvider";
+option csharp_namespace = "Presentation";
 
 package ticket;
 
@@ -12,18 +12,12 @@ service TicketManager {
 }
 
 message CreateTicketsRequest {
-	string event_name = 1;
-	string event_date = 2;
-	string event_time = 3;
-	string event_location = 4;
-	string event_category_name = 5;
-	int32 ticket_group_quantity = 6;
-	int32 ticket_category_name = 7;
-	string first_name = 8;
-	string last_name = 9;
-	string invoice_id = 10;
-	string e_voucher_group_id = 11;
-	string booking_id = 12;
+	string booking_id = 1;
+	string event_id = 2;
+	string user_id = 3;
+	string ticket_category_name = 4;
+	string ticket_price = 5;
+	int32 ticket_quantity = 6;
 }
   
 message Ticket {
@@ -41,7 +35,6 @@ message Ticket {
 	string gate = 12;
 	string booking_id = 13;
 	string invoice_id = 14;
-	string e_voucher_group_id = 15;
 
 }
 
