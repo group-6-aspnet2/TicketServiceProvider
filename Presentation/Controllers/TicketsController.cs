@@ -59,27 +59,28 @@ public class TicketsController(ITicketService ticketService) : ControllerBase
         }
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateNewTickets(CreateTicketsForm form)
-    {
-        try
-        {
-            if (form == null)
-                return BadRequest("Invalid ticket form");
+    // Test för att kolla om service funkar
+    //[HttpPost]
+    //public async Task<IActionResult> CreateNewTickets(CreateTicketsForm form)
+    //{
+    //    try
+    //    {
+    //        if (form == null)
+    //            return BadRequest("Invalid ticket form");
 
 
-            var result = await _ticketService.CreateNewTicketsAsync(form);
-            return result.StatusCode switch
-            {
-                201 => Ok(result.Result),
-                400 => BadRequest(result.Error),
-                _ => Problem(result.Error)
-            };
-        }
-        catch (Exception ex)
-        {
-            Debug.Write(ex);
-            return BadRequest(ex.Message);
-        }
-    }
+    //        var result = await _ticketService.CreateNewTicketsAsync(form);
+    //        return result.StatusCode switch
+    //        {
+    //            201 => Ok(result.Result),
+    //            400 => BadRequest(result.Error),
+    //            _ => Problem(result.Error)
+    //        };
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Debug.Write(ex);
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
 }
