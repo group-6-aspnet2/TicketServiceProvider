@@ -1,11 +1,11 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Data.Entities;
 using Data.Interfaces;
-using Domain.Extensions;
 using Domain.Models;
 using Domain.Responses;
+using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
-using System.Net.Sockets;
+using System.Text.Json;
 
 namespace Business.Services;
 
@@ -14,18 +14,66 @@ public interface ITicketService
     Task<TicketResponse<IEnumerable<TicketModel>>> CreateNewTicketsAsync(CreateTicketsForm form);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetTicketsByBookingIdAsync(string bookingId);
+    Task ListenAsync();
+    Task StopListeningAsync();
 }
 
-public class TicketService(ITicketRepository ticketRepository /*, EventContract.EventContractClient eventClient */) : ITicketService
+public class TicketService : ITicketService
 {
-    private readonly ITicketRepository _ticketRepository = ticketRepository;
     //private readonly EventContract.EventContractClient _eventClient = eventClient;
+    private readonly ITicketRepository _ticketRepository;
+    private readonly ServiceBusClient _client;
+    private ServiceBusProcessor? _processor;
+
+    public TicketService(IConfiguration configuration, ITicketRepository ticketRepository, ServiceBusClient client)
+    {
+        _ticketRepository = ticketRepository;
+        _client = new ServiceBusClient(configuration["ServiceBus:ConnectionString"]);
+    }
+
+
+    public async Task ListenAsync()
+    {
+        var processorOptions = new ServiceBusProcessorOptions();
+        _processor = _client.CreateProcessor("CreateTicketQueue", processorOptions);
+
+        _processor.ProcessMessageAsync += async args =>
+        {
+            var body = args.Message.Body.ToString();
+            Console.WriteLine($"Received message: {body}");
+
+            var form = JsonSerializer.Deserialize<CreateTicketsForm>(body);
+
+            if (form != null)
+            {
+                await CreateNewTicketsAsync(form);
+                await args.CompleteMessageAsync(args.Message);
+            }
+        };
+
+        _processor.ProcessErrorAsync += args =>
+        {
+            Console.WriteLine($"Message handler encountered an exception: {args.Exception.Message}");
+            return Task.CompletedTask;
+        };
+        await _processor.StartProcessingAsync();
+    }
+
+    public async Task StopListeningAsync()
+    {
+        if (_processor != null)
+        {
+            await _processor.StopProcessingAsync();
+            await _processor.DisposeAsync();
+        }
+    }
+
 
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId)
     {
         var result = await _ticketRepository.GetAllAsync(filterBy: x => x.UserId == userId, sortByColumn: x => x.BookingId, orderByDescending: true);
 
-        // Hämta users och events med UserId och EventId, returnera med properties i TicketModel
+        // Hämta event med EventId, returnera med properties i TicketModel
 
 
         return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
@@ -35,7 +83,7 @@ public class TicketService(ITicketRepository ticketRepository /*, EventContract.
     {
         var result = await _ticketRepository.GetAllAsync(filterBy: x => x.BookingId == bookingId);
 
-        // Hämta users och events med UserId och EventId, returnera med properties i TicketModel
+        // Hämta event med EventId, returnera med properties i TicketModel
 
         return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
     }
@@ -66,16 +114,6 @@ public class TicketService(ITicketRepository ticketRepository /*, EventContract.
 
             var results = new List<RepositoryResult<TicketModel>>();
             var models = new List<TicketModel>();
-
-            //foreach (var ticket in entities)
-            //{
-            //    var result = await _ticketRepository.AddAsync(ticket);
-
-            //    if (!result.Succeeded)
-            //        results.Add(result);
-                
-            //    models.Add(result.Result!);
-            //}
 
             for (int i = 0; i < entities.Count(); i++)
             {

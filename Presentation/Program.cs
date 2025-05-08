@@ -1,3 +1,4 @@
+using Azure.Messaging.ServiceBus;
 using Business.Services;
 using Data.Contexts;
 using Data.Interfaces;
@@ -11,8 +12,20 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddSingleton<ServiceBusClient>( provider =>
+{
+    var serviceBusConnectionString = provider.GetRequiredService<IConfiguration>()["ServiceBus:ConnectionString"];
+    return new ServiceBusClient(serviceBusConnectionString);
+});
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var ticketService = scope.ServiceProvider.GetRequiredService<ITicketService>();
+    await ticketService.ListenAsync(); 
+}
+
 app.MapOpenApi();
 app.UseHttpsRedirection();
 app.UseAuthorization();
