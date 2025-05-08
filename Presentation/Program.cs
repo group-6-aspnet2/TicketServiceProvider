@@ -17,6 +17,7 @@ builder.Services.AddSingleton<ServiceBusClient>( provider =>
     var serviceBusConnectionString = provider.GetRequiredService<IConfiguration>()["ServiceBus:ConnectionString"];
     return new ServiceBusClient(serviceBusConnectionString);
 });
+builder.Services.AddHostedService<TicketListenerService>();
 
 var app = builder.Build();
 

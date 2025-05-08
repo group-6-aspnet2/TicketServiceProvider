@@ -7,6 +7,5 @@ namespace Data.Repositories;
 
 public class TicketRepository(DataContext context) : BaseRepository<TicketEntity, TicketModel>(context), ITicketRepository
 {
-
 }
 

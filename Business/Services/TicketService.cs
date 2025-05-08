@@ -35,7 +35,7 @@ public class TicketService : ITicketService
     public async Task ListenAsync()
     {
         var processorOptions = new ServiceBusProcessorOptions();
-        _processor = _client.CreateProcessor("CreateTicketQueue", processorOptions);
+        _processor = _client.CreateProcessor("create-ticket", processorOptions);
 
         _processor.ProcessMessageAsync += async args =>
         {
@@ -44,7 +44,8 @@ public class TicketService : ITicketService
 
             var form = JsonSerializer.Deserialize<CreateTicketsForm>(body);
 
-            if (form != null)
+            Console.WriteLine("Form i string: ", form!.ToString());
+            if (!string.IsNullOrWhiteSpace(form.ToString()))
             {
                 await CreateNewTicketsAsync(form);
                 await args.CompleteMessageAsync(args.Message);
