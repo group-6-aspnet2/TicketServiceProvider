@@ -10,7 +10,6 @@ namespace Presentation.GrpcServices;
 public class TicketGrpcService(ITicketService ticketService) :TicketManager.TicketManagerBase
 {
     private readonly ITicketService _ticketService = ticketService;
-
    
 public override async Task<CreateTicketsReply> CreateTickets(CreateTicketsRequest request, ServerCallContext context)
 {
@@ -34,32 +33,6 @@ public override async Task<CreateTicketsReply> CreateTickets(CreateTicketsReques
                 TicketQuantity = request.TicketQuantity,
             };
 
-
-       //     var tickets = new List<Ticket>();
-       //for (int i = 0; i < request.TicketGroupQuantity; i++)
-       //{
-       //    tickets.Add(
-       //         new Ticket
-       //         {
-       //             TicketId = Guid.NewGuid().ToString(),
-       //             EventName = request.EventName,
-       //             EventDate = request.EventDate,
-       //             EventTime = request.EventTime,
-       //             EventLocation = request.EventLocation,
-       //             EventCategoryName = request.EventCategoryName,
-       //             TicketGroupQuantity = request.TicketGroupQuantity,
-       //             TicketCategoryName = request.TicketCategoryName,
-       //             FirstName = request.FirstName,
-       //             LastName = request.LastName,
-       //             //SeatNumber = request.SeatNumber, // TODO generera typ 12A osv
-       //             //Gate = request.Gate, // TODO generera bokstav A-Z
-       //             BookingId = request.BookingId,
-       //             InvoiceId = request.InvoiceId,
-       //             EVoucherGroupId = request.EVoucherGroupId,
-       //         }
-       //        );
-       //}
-
           var result = await _ticketService.CreateNewTicketsAsync(serviceRequest);
 
             if (!result.Succeeded)
@@ -70,7 +43,6 @@ public override async Task<CreateTicketsReply> CreateTickets(CreateTicketsReques
                     Message = result.Error,
                 };
             }
-
             var tickets = result.Result!.Select(x => x.MapTo<Ticket>());
 
        return new CreateTicketsReply
@@ -78,7 +50,7 @@ public override async Task<CreateTicketsReply> CreateTickets(CreateTicketsReques
            Succeeded = true,
            Message = "Tickets created successfully",
            StatusCode = result.StatusCode.ToString(),
-           //Tickets = tickets
+           Tickets = { tickets }
        };
    }
    catch (Exception ex)
@@ -93,19 +65,29 @@ public override async Task<CreateTicketsReply> CreateTickets(CreateTicketsReques
 }
 
 
-    public override Task<GetTicketsReply> GetTickets(GetTicketsRequest request, ServerCallContext context)
+    public async override Task<GetTicketsReply> GetTickets(GetTicketsRequest request, ServerCallContext context)
     {
-        return base.GetTickets(request, context);
+        var response = await _ticketService.GetAllTicketsAsync();
+        var tickets = response.Result!.Select(x => x.MapTo<Ticket>());
+
+        return new GetTicketsReply
+        {
+            Tickets = { tickets },
+            Succeeded = response.Succeeded,
+        };
+
     }
 
-    //public async override Task<GetTicketsByBookingIdReply> GetTicketsByBookingId(GetTicketsByBookingIdRequest request, ServerCallContext context)
-    //{
-    //    var result = await _ticketService.GetTicketsByBookingIdAsync(request.BookingId);
-    //    return new GetTicketsByBookingIdReply
-    //    {
-    //        Tickets = { result.Result }
-    //    };
-    //}
+    public async override Task<GetTicketsByBookingIdReply> GetTicketsByBookingId(GetTicketsByBookingIdRequest request, ServerCallContext context)
+    {
+        var result = await _ticketService.GetTicketsByBookingIdAsync(request.BookingId);
+        var tickets = result.Result!.Select(x => x.MapTo<Ticket>());
+
+        return new GetTicketsByBookingIdReply
+        {
+            Tickets = { tickets }
+        };
+    }
 
     public override Task<DeleteTicketsByBookingIdReply> DeleteTicketsByBookingId(DeleteTicketsByBookingIdRequest request, ServerCallContext context)
     {

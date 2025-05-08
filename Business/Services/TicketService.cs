@@ -12,6 +12,7 @@ namespace Business.Services;
 public interface ITicketService
 {
     Task<TicketResponse<IEnumerable<TicketModel>>> CreateNewTicketsAsync(CreateTicketsForm form);
+    Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync();
     Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetTicketsByBookingIdAsync(string bookingId);
     Task ListenAsync();
@@ -69,6 +70,13 @@ public class TicketService : ITicketService
         }
     }
 
+
+    public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync()
+    {
+        var result = await _ticketRepository.GetAllAsync();
+        // Hämta event med EventId, returnera med properties i TicketModel
+        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
+    }
 
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId)
     {
