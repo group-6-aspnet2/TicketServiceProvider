@@ -1,9 +1,12 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Data.Entities;
 using Data.Interfaces;
+using Domain.Extensions;
 using Domain.Models;
 using Domain.Responses;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Text.Json;
 
@@ -15,24 +18,22 @@ public interface ITicketService
     Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync();
     Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetTicketsByBookingIdAsync(string bookingId);
-    Task ListenAsync();
-    Task StopListeningAsync();
 }
-
+    //private readonly EventContract.EventContractClient _eventClient = eventClient;
 public class TicketService : ITicketService
 {
-    //private readonly EventContract.EventContractClient _eventClient = eventClient;
     private readonly ITicketRepository _ticketRepository;
-    private readonly ServiceBusClient _client;
-    private ServiceBusProcessor? _processor;
+    private readonly IServiceProvider _serviceProvider;
 
-    public TicketService(IConfiguration configuration, ITicketRepository ticketRepository, ServiceBusClient client)
+
+    public TicketService(ITicketRepository ticketRepository)
     {
         _ticketRepository = ticketRepository;
-        _client = new ServiceBusClient(configuration["ServiceBus:ConnectionString"]);
+
     }
+  
 
-
+    /*
     public async Task ListenAsync()
     {
         var processorOptions = new ServiceBusProcessorOptions();
@@ -69,7 +70,7 @@ public class TicketService : ITicketService
             await _processor.DisposeAsync();
         }
     }
-
+    */
 
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync()
     {
@@ -97,15 +98,10 @@ public class TicketService : ITicketService
         return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
     }
 
-    public async Task<TicketResponse<IEnumerable<TicketModel>>> CreateNewTicketsAsync(CreateTicketsForm form)
-    {
-        try
-        {
-            if (form == null)
-                return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Invalid ticket form", StatusCode = 400 };
 
-            var entities = new List<TicketEntity>();
-
+    /*
+       var results = new List<RepositoryResult<TicketModel>>();
+            var models = new List<TicketModel>();
             for (int i = 0; i < form.TicketQuantity; i++)
             {
                 var entityToAdd = new TicketEntity
@@ -118,25 +114,58 @@ public class TicketService : ITicketService
                     Gate = "C",
                     TicketCategoryName = form.TicketCategoryName
                 };
-                entities.Add(entityToAdd);
-            }
 
-            var results = new List<RepositoryResult<TicketModel>>();
-            var models = new List<TicketModel>();
-
-            for (int i = 0; i < entities.Count(); i++)
-            {
                 var result = await _ticketRepository.AddAsync(entities[i]);
-
-                if (!result.Succeeded)
-                    results.Add(result);
-
                 models.Add(result.Result!);
-            }
 
+                //entities.Add(entityToAdd);
+            }
             if (results.Any(x => x.Succeeded == false))
                 return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
 
+     */
+
+    public async Task<TicketResponse<IEnumerable<TicketModel>>> CreateNewTicketsAsync(CreateTicketsForm form)
+    {
+        try
+        {
+            if (form == null)
+                return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Invalid ticket form", StatusCode = 400 };
+
+            var entities = new List<TicketEntity>();
+            
+            for (int i = 0; i < form.TicketQuantity; i++)
+            {
+                var entityToAdd = new TicketEntity
+                {
+                    BookingId = form.BookingId,
+                    EventId = form.EventId,
+                    UserId = form.UserId,
+                    TicketPrice = form.TicketPrice,
+                    SeatNumber = "19B",
+                    Gate = "C",
+                    TicketCategoryName = form.TicketCategoryName
+                };
+
+                entities.Add(entityToAdd);
+            }
+         
+              var results = new List<RepositoryResult<TicketModel>>();
+              var models = new List<TicketModel>();
+
+              for (int i = 0; i < entities.Count(); i++)
+              {
+                  var result = await _ticketRepository.AddAsync(entities[i]);
+
+                  if (!result.Succeeded)
+                      results.Add(result);
+
+                  models.Add(result.Result!);
+              }
+
+              if (results.Any(x => x.Succeeded == false))
+                  return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
+           
             //var eventRequest = new GetEventByIdRequest { EventId = form.EventId };
             //GetEventByIdReply eventReply = _eventClient.GetEventById(eventRequest);
 
