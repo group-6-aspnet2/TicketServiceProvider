@@ -1,6 +1,8 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Data.Interfaces;
 using Domain.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 
@@ -12,23 +14,38 @@ public interface IQueueService
     Task StopAsync();
 }
 
-public class QueueService : IQueueService
+public class QueueService  : /* BackgroundService,*/  IQueueService
 {
     private readonly ITicketService _ticketService;
     private readonly AzureServiceBusSettings _settings;
     private readonly ServiceBusClient _client;
     private ServiceBusProcessor _processor;
+    //private readonly IServiceScopeFactory _scopeFactory;
 
-    public QueueService(IOptions<AzureServiceBusSettings> options, ITicketService ticketService)
+    public QueueService(IOptions<AzureServiceBusSettings> options, ITicketService ticketService/*, IServiceScopeFactory scopeFactory*/)
     {
         _settings = options.Value;
         _client = new ServiceBusClient(_settings.ConnectionString);
         _processor = _client.CreateProcessor(_settings.QueueName, new ServiceBusProcessorOptions());
+        //_scopeFactory = scopeFactory;
 
+        
+        _ticketService = ticketService;
         RegisterMessageHandler();
         RegisterErrorHandler();
-        _ticketService = ticketService;
     }
+
+    //protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    //{
+    //    while (!stoppingToken.IsCancellationRequested)
+    //    {
+    //        using var scope = _scopeFactory.CreateScope();
+    //        var ticketService = scope.ServiceProvider.GetRequiredService<ITicketService>();
+
+    //        await StartAsync();
+
+    //    }
+    //}
 
     private void RegisterMessageHandler()
     {

@@ -153,23 +153,27 @@ public class TicketService : ITicketService
               var results = new List<RepositoryResult<TicketModel>>();
               var models = new List<TicketModel>();
 
-              for (int i = 0; i < entities.Count(); i++)
-              {
-                  var result = await _ticketRepository.AddAsync(entities[i]);
+            var result = await _ticketRepository.AddRangeAsync(entities);
+            //for (int i = 0; i < entities.Count(); i++)
+            //{
+            //    var result = await _ticketRepository.AddAsync(entities[i]);
 
-                  if (!result.Succeeded)
-                      results.Add(result);
+            //    if (!result.Succeeded)
+            //        results.Add(result);
 
-                  models.Add(result.Result!);
-              }
+            //    models.Add(result.Result!);
+            //}
 
-              if (results.Any(x => x.Succeeded == false))
-                  return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
+            //if (results.Any(x => x.Succeeded == false))
+            //      return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
            
-            //var eventRequest = new GetEventByIdRequest { EventId = form.EventId };
-            //GetEventByIdReply eventReply = _eventClient.GetEventById(eventRequest);
+            if(!result.Succeeded)
+                return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
 
-            models.ForEach(ticket =>
+                //var eventRequest = new GetEventByIdRequest { EventId = form.EventId };
+                //GetEventByIdReply eventReply = _eventClient.GetEventById(eventRequest);
+
+                models.ForEach(ticket =>
             { // använd eventReply istället när det funkar
                 ticket.EventName = "Way Out West";
                 ticket.EventDate = DateOnly.FromDateTime(DateTime.Now);

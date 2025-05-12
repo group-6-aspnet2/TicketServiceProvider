@@ -15,15 +15,15 @@ builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer(builder.Configura
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 
-builder.Services.AddScoped<IQueueService, QueueService>();
+builder.Services.AddTransient<IQueueService, QueueService>();
 
 var app = builder.Build();
-
 using (var scope = app.Services.CreateScope())
 {
     var queueService = scope.ServiceProvider.GetRequiredService<IQueueService>();
     await queueService.StartAsync();
 }
+
 
 app.MapOpenApi();
 app.UseHttpsRedirection();
