@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Business", "Business\Business.csproj", "{09A6027F-8416-444D-A0EB-695590BF449C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Presentation", "Presentation\Presentation.csproj", "{30FAE89C-C3D0-4976-9E3F-416FDDD20C90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Presentation.AzureFunctions", "Presentation.AzureFunctions\Presentation.AzureFunctions.csproj", "{2D219E40-113B-4AC1-93EC-03BCE20154FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{09A6027F-8416-444D-A0EB-695590BF449C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09A6027F-8416-444D-A0EB-695590BF449C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09A6027F-8416-444D-A0EB-695590BF449C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{30FAE89C-C3D0-4976-9E3F-416FDDD20C90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{30FAE89C-C3D0-4976-9E3F-416FDDD20C90}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{30FAE89C-C3D0-4976-9E3F-416FDDD20C90}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{30FAE89C-C3D0-4976-9E3F-416FDDD20C90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D219E40-113B-4AC1-93EC-03BCE20154FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D219E40-113B-4AC1-93EC-03BCE20154FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D219E40-113B-4AC1-93EC-03BCE20154FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D219E40-113B-4AC1-93EC-03BCE20154FA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
