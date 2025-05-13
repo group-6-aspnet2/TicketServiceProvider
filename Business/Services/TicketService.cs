@@ -1,4 +1,5 @@
-﻿using Data.Entities;
+﻿using Business.Helpers;
+using Data.Entities;
 using Data.Interfaces;
 using Domain.Models;
 using Domain.Responses;
@@ -17,7 +18,7 @@ public interface ITicketService
 public class TicketService(ITicketRepository ticketRepository) : ITicketService
 {
     private readonly ITicketRepository _ticketRepository = ticketRepository;
-
+    
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync()
     {
         var result = await _ticketRepository.GetAllAsync();
@@ -44,33 +45,6 @@ public class TicketService(ITicketRepository ticketRepository) : ITicketService
         return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
     }
 
-
-    /*
-       var results = new List<RepositoryResult<TicketModel>>();
-            var models = new List<TicketModel>();
-            for (int i = 0; i < form.TicketQuantity; i++)
-            {
-                var entityToAdd = new TicketEntity
-                {
-                    BookingId = form.BookingId,
-                    EventId = form.EventId,
-                    UserId = form.UserId,
-                    TicketPrice = form.TicketPrice,
-                    SeatNumber = "19B",
-                    Gate = "C",
-                    TicketCategoryName = form.TicketCategoryName
-                };
-
-                var result = await _ticketRepository.AddAsync(entities[i]);
-                models.Add(result.Result!);
-
-                //entities.Add(entityToAdd);
-            }
-            if (results.Any(x => x.Succeeded == false))
-                return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
-
-     */
-
     public async Task<TicketResponse<IEnumerable<TicketModel>>> CreateNewTicketsAsync(CreateTicketsForm form)
     {
         try
@@ -79,17 +53,21 @@ public class TicketService(ITicketRepository ticketRepository) : ITicketService
                 return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Invalid ticket form", StatusCode = 400 };
 
             var entities = new List<TicketEntity>();
+            var voucherInfos = TicketGenerator.GenerateSeatsAndGate(form.TicketQuantity);
             
             for (int i = 0; i < form.TicketQuantity; i++)
             {
+                if (voucherInfos.Count != form.TicketQuantity)
+                    return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to generate tickets", StatusCode = 500 };
+
                 var entityToAdd = new TicketEntity
                 {
                     BookingId = form.BookingId,
                     EventId = form.EventId,
                     UserId = form.UserId,
                     TicketPrice = form.TicketPrice,
-                    SeatNumber = "19B",
-                    Gate = "C",
+                    SeatNumber = voucherInfos[i].SeatNumber,
+                    Gate = voucherInfos[i].Gate,
                     TicketCategoryName = form.TicketCategoryName
                 };
 
@@ -100,19 +78,7 @@ public class TicketService(ITicketRepository ticketRepository) : ITicketService
               var models = new List<TicketModel>();
 
             var result = await _ticketRepository.AddRangeAsync(entities);
-            //for (int i = 0; i < entities.Count(); i++)
-            //{
-            //    var result = await _ticketRepository.AddAsync(entities[i]);
-
-            //    if (!result.Succeeded)
-            //        results.Add(result);
-
-            //    models.Add(result.Result!);
-            //}
-
-            //if (results.Any(x => x.Succeeded == false))
-            //      return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
-           
+         
             if(!result.Succeeded)
                 return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
 
