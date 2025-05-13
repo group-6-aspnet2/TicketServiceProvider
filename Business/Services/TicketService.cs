@@ -1,14 +1,8 @@
-﻿using Azure.Messaging.ServiceBus;
-using Data.Entities;
+﻿using Data.Entities;
 using Data.Interfaces;
-using Domain.Extensions;
 using Domain.Models;
 using Domain.Responses;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using System.Diagnostics;
-using System.Text.Json;
 
 namespace Business.Services;
 
@@ -20,57 +14,9 @@ public interface ITicketService
     Task<TicketResponse<IEnumerable<TicketModel>>> GetTicketsByBookingIdAsync(string bookingId);
 }
     //private readonly EventContract.EventContractClient _eventClient = eventClient;
-public class TicketService : ITicketService
+public class TicketService(ITicketRepository ticketRepository) : ITicketService
 {
-    private readonly ITicketRepository _ticketRepository;
-    private readonly IServiceProvider _serviceProvider;
-
-
-    public TicketService(ITicketRepository ticketRepository)
-    {
-        _ticketRepository = ticketRepository;
-
-    }
-  
-
-    /*
-    public async Task ListenAsync()
-    {
-        var processorOptions = new ServiceBusProcessorOptions();
-        _processor = _client.CreateProcessor("create-ticket", processorOptions);
-
-        _processor.ProcessMessageAsync += async args =>
-        {
-            var body = args.Message.Body.ToString();
-            Console.WriteLine($"Received message: {body}");
-
-            var form = JsonSerializer.Deserialize<CreateTicketsForm>(body);
-
-            Console.WriteLine("Form i string: ", form!.ToString());
-            if (!string.IsNullOrWhiteSpace(form.ToString()))
-            {
-                await CreateNewTicketsAsync(form);
-                await args.CompleteMessageAsync(args.Message);
-            }
-        };
-
-        _processor.ProcessErrorAsync += args =>
-        {
-            Console.WriteLine($"Message handler encountered an exception: {args.Exception.Message}");
-            return Task.CompletedTask;
-        };
-        await _processor.StartProcessingAsync();
-    }
-
-    public async Task StopListeningAsync()
-    {
-        if (_processor != null)
-        {
-            await _processor.StopProcessingAsync();
-            await _processor.DisposeAsync();
-        }
-    }
-    */
+    private readonly ITicketRepository _ticketRepository = ticketRepository;
 
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync()
     {
