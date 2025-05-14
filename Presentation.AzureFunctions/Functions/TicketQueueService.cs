@@ -24,7 +24,6 @@ public class TicketQueueService
     {
         var body = message.Body.ToString();
         var form = JsonSerializer.Deserialize<CreateTicketsForm>(body);
-        _logger.LogDebug(body);
 
         if (form != null)
         {
