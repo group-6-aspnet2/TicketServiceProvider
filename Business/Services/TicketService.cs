@@ -1,6 +1,8 @@
-﻿using Business.Helpers;
+﻿using Business.Factories;
+using Business.Helpers;
 using Data.Entities;
 using Data.Interfaces;
+using Domain.Extensions;
 using Domain.Models;
 using Domain.Responses;
 using System.Diagnostics;
@@ -14,35 +16,79 @@ public interface ITicketService
     Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetTicketsByBookingIdAsync(string bookingId);
 }
-    //private readonly EventContract.EventContractClient _eventClient = eventClient;
-public class TicketService(ITicketRepository ticketRepository) : ITicketService
+public class TicketService(ITicketRepository ticketRepository, EventContract.EventContractClient eventClient) : ITicketService
 {
     private readonly ITicketRepository _ticketRepository = ticketRepository;
-    
+    private readonly EventContract.EventContractClient _eventClient = eventClient;
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync()
     {
         var result = await _ticketRepository.GetAllAsync();
-        // Hämta event med EventId, returnera med properties i TicketModel
-        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
+
+        if(result.Result == null || !result.Succeeded)
+            return new TicketResponse<IEnumerable<TicketModel>>{ Error= "Could not get all tickets", StatusCode= result.StatusCode, Succeeded = result.Succeeded};
+
+        var ticketModels = new List<TicketModel>();
+
+        foreach (var ticket in result.Result)
+        {
+            var eventResult = await _eventClient.GetEventByIdAsync(new GetEventByIdRequest{EventId= ticket.EventId});
+            var eventForTicket = eventResult.Event;
+
+            var model = ticket.MapTo<TicketModel>();
+
+            var modelWithEventDetails = TicketFactory.MapEventToTicketModel(model, eventForTicket);
+            if (modelWithEventDetails != null)
+                ticketModels.Add(modelWithEventDetails);
+        }
+
+        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = ticketModels, StatusCode = result.StatusCode };
     }
 
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId)
     {
         var result = await _ticketRepository.GetAllAsync(filterBy: x => x.UserId == userId, sortByColumn: x => x.BookingId, orderByDescending: true);
 
-        // Hämta event med EventId, returnera med properties i TicketModel
+        if (result.Result == null || !result.Succeeded)
+            return new TicketResponse<IEnumerable<TicketModel>> { Error = "Could not get all tickets", StatusCode = result.StatusCode, Succeeded = result.Succeeded };
 
+        var ticketModels = new List<TicketModel>();
 
-        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
+        foreach (var ticket in result.Result)
+        {
+            var eventResult = await _eventClient.GetEventByIdAsync(new GetEventByIdRequest { EventId = ticket.EventId });
+            var eventForTicket = eventResult.Event;
+
+            var model = ticket.MapTo<TicketModel>();
+
+            var modelWithEventDetails = TicketFactory.MapEventToTicketModel(model, eventForTicket);
+            if (modelWithEventDetails != null)
+                ticketModels.Add(modelWithEventDetails);
+        }
+
+        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = ticketModels, StatusCode = result.StatusCode };
     }
 
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetTicketsByBookingIdAsync(string bookingId)
     {
         var result = await _ticketRepository.GetAllAsync(filterBy: x => x.BookingId == bookingId);
 
-        // Hämta event med EventId, returnera med properties i TicketModel
+        if (result.Result == null || !result.Succeeded)
+            return new TicketResponse<IEnumerable<TicketModel>> { Error = "Could not get all tickets", StatusCode = result.StatusCode, Succeeded = result.Succeeded };
 
-        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = result.Result };
+        var ticketModels = new List<TicketModel>();
+
+        foreach (var ticket in result.Result)
+        {
+            var eventResult = await _eventClient.GetEventByIdAsync(new GetEventByIdRequest { EventId = ticket.EventId });
+            var eventForTicket = eventResult.Event;
+
+            var model = ticket.MapTo<TicketModel>();
+
+            var modelWithEventDetails = TicketFactory.MapEventToTicketModel(model, eventForTicket);
+            if (modelWithEventDetails != null)
+                ticketModels.Add(modelWithEventDetails);
+        }
+        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = ticketModels, StatusCode=result.StatusCode };
     }
 
     public async Task<TicketResponse<IEnumerable<TicketModel>>> CreateNewTicketsAsync(CreateTicketsForm form)
@@ -54,7 +100,7 @@ public class TicketService(ITicketRepository ticketRepository) : ITicketService
 
             var entities = new List<TicketEntity>();
             var voucherInfos = TicketGenerator.GenerateSeatsAndGate(form.TicketQuantity);
-            
+
             for (int i = 0; i < form.TicketQuantity; i++)
             {
                 if (voucherInfos.Count != form.TicketQuantity)
@@ -73,26 +119,26 @@ public class TicketService(ITicketRepository ticketRepository) : ITicketService
 
                 entities.Add(entityToAdd);
             }
-         
-              var results = new List<RepositoryResult<TicketModel>>();
-              var models = new List<TicketModel>();
+
+            var results = new List<RepositoryResult<TicketModel>>();
+            var models = new List<TicketModel>();
 
             var result = await _ticketRepository.AddRangeAsync(entities);
-         
-            if(!result.Succeeded)
+
+            if (!result.Succeeded)
                 return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
 
-                //var eventRequest = new GetEventByIdRequest { EventId = form.EventId };
-                //GetEventByIdReply eventReply = _eventClient.GetEventById(eventRequest);
+            //var eventRequest = new GetEventByIdRequest { EventId = form.EventId };
+            //GetEventByIdReply eventReply = _eventClient.GetEventById(eventRequest);
 
-                models.ForEach(ticket =>
-            { // använd eventReply istället när det funkar
-                ticket.EventName = "Way Out West";
-                ticket.EventDate = DateOnly.FromDateTime(DateTime.Now);
-                ticket.EventTime = TimeOnly.FromDateTime(DateTime.Now);
-                ticket.EventLocation = "Jussi Björlings allé, 111 47 Stockholm";
-                ticket.EventCategoryName = "Music";
-            });
+            models.ForEach(ticket =>
+        { // använd eventReply istället när det funkar
+            ticket.EventName = "Way Out West";
+            ticket.EventDate = DateOnly.FromDateTime(DateTime.Now);
+            ticket.EventTime = TimeOnly.FromDateTime(DateTime.Now);
+            ticket.EventLocation = "Jussi Björlings allé, 111 47 Stockholm";
+            ticket.EventCategoryName = "Music";
+        });
 
             return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, StatusCode = 201, Result = models };
 
