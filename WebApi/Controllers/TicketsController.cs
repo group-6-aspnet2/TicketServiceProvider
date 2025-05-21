@@ -50,6 +50,27 @@ namespace WebApi.Controllers
             }
         }
 
+        [HttpGet("event/{eventId}")]
+        public async Task<IActionResult> GetTicketsByEventId(string eventId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(eventId))
+                    return BadRequest("No valid event id provided");
+
+                var result = await _ticketService.GetAllTicketsByEventIdAsync(eventId);
+                return result.StatusCode switch
+                {
+                    200 => Ok(result.Result),
+                    _ => Problem(result.Error)
+                };
+            }
+            catch (Exception ex)
+            {
+                return Problem(detail: ex.Message, statusCode: 500);
+            }
+        }
+
         [HttpGet("booking/{bookingId}")]
         public async Task<IActionResult> GetTicketsByBookingId(string bookingId)
         {

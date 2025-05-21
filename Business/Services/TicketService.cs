@@ -13,6 +13,7 @@ public interface ITicketService
 {
     Task<TicketResponse<IEnumerable<TicketModel>>> CreateNewTicketsAsync(CreateTicketsForm form);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync();
+    Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByEventIdAsync(string eventId);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByUserIdAsync(string userId);
     Task<TicketResponse<IEnumerable<TicketModel>>> GetTicketsByBookingIdAsync(string bookingId);
 }
@@ -22,7 +23,7 @@ public class TicketService(ITicketRepository ticketRepository, EventContract.Eve
     private readonly EventContract.EventContractClient _eventClient = eventClient;
     public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsAsync()
     {
-        var result = await _ticketRepository.GetAllAsync();
+        var result = await _ticketRepository.GetAllAsync(sortByColumn: x => x.BookingId);
 
         if(result.Result == null || !result.Succeeded)
             return new TicketResponse<IEnumerable<TicketModel>>{ Error= "Could not get all tickets", StatusCode= result.StatusCode, Succeeded = result.Succeeded};
@@ -32,6 +33,30 @@ public class TicketService(ITicketRepository ticketRepository, EventContract.Eve
         foreach (var ticket in result.Result)
         {
             var eventResult = await _eventClient.GetEventByIdAsync(new GetEventByIdRequest{EventId= ticket.EventId});
+            var eventForTicket = eventResult.Event;
+
+            var model = ticket.MapTo<TicketModel>();
+
+            var modelWithEventDetails = TicketFactory.MapEventToTicketModel(model, eventForTicket);
+            if (modelWithEventDetails != null)
+                ticketModels.Add(modelWithEventDetails);
+        }
+
+        return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, Result = ticketModels, StatusCode = result.StatusCode };
+    }
+
+    public async Task<TicketResponse<IEnumerable<TicketModel>>> GetAllTicketsByEventIdAsync(string eventId)
+    {
+        var result = await _ticketRepository.GetAllAsync(filterBy: x => x.EventId == eventId, sortByColumn: x => x.BookingId, orderByDescending: true);
+
+        if (result.Result == null || !result.Succeeded)
+            return new TicketResponse<IEnumerable<TicketModel>> { Error = "Could not get tickets for event", StatusCode = result.StatusCode, Succeeded = result.Succeeded };
+
+        var ticketModels = new List<TicketModel>();
+
+        foreach (var ticket in result.Result)
+        {
+            var eventResult = await _eventClient.GetEventByIdAsync(new GetEventByIdRequest { EventId = ticket.EventId });
             var eventForTicket = eventResult.Event;
 
             var model = ticket.MapTo<TicketModel>();
