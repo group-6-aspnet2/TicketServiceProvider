@@ -125,20 +125,22 @@ public class TicketService(ITicketRepository ticketRepository, EventContract.Eve
 
             var result = await _ticketRepository.AddRangeAsync(entities);
 
-            if (!result.Succeeded)
+            if (!result.Succeeded || result.Result == null)
                 return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = false, Error = "Failed to create tickets", StatusCode = 500 };
 
-            //var eventRequest = new GetEventByIdRequest { EventId = form.EventId };
-            //GetEventByIdReply eventReply = _eventClient.GetEventById(eventRequest);
+            var eventResult = await _eventClient.GetEventByIdAsync(new GetEventByIdRequest { EventId = form.EventId });
+            var eventForTicket = eventResult.Event;
 
-            models.ForEach(ticket =>
-        { // använd eventReply istället när det funkar
-            ticket.EventName = "Way Out West";
-            ticket.EventDate = DateOnly.FromDateTime(DateTime.Now);
-            ticket.EventTime = TimeOnly.FromDateTime(DateTime.Now);
-            ticket.EventLocation = "Jussi Björlings allé, 111 47 Stockholm";
-            ticket.EventCategoryName = "Music";
-        });
+
+
+            foreach (var ticket in result.Result)
+            {
+                var model = ticket.MapTo<TicketModel>();
+                var ticketWithEventDetails = TicketFactory.MapEventToTicketModel(ticket, eventForTicket);
+
+                models.Add(model);
+            }
+
 
             return new TicketResponse<IEnumerable<TicketModel>> { Succeeded = true, StatusCode = 201, Result = models };
 
