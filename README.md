@@ -13,6 +13,7 @@ TicketServiceProvider is a microservice built with ASP.NET Core that handles tic
 - Solid
 - Dynamic mapping
 - Factories
+- xUnit testing
 
 ### Azure Service Bus Integration 
 This service listens to a Service Bus Queue (e.g., create-tickets) using a background service. Workflow: Another microservice (e.g., BookingServiceProvider) sends a message to the create-tickets queue after a booking is made. The background service picks up the message and extracts the ticket information. Tickets are created and saved to the database accordingly.
