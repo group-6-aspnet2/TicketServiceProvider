@@ -3,7 +3,7 @@
 namespace Business.Helpers;
 
 
-    public class TicketGenerator
+public class TicketGenerator
 {
     private static Random random = new Random();
 
@@ -30,7 +30,7 @@ namespace Business.Helpers;
     // Genererat från chatgpt. Skapar slumpmässig gate, returnerar string med A-Z.
     public static string GenerateGate()
     {
-        char gate = (char)('A' + random.Next(0, 26)); 
+        char gate = (char)('A' + random.Next(0, 26));
         return gate.ToString();
     }
 }
