@@ -12,10 +12,19 @@ public static class TicketFactory
             ArgumentNullException.ThrowIfNull(ticket);
             ArgumentNullException.ThrowIfNull(ticketEvent);
 
+            if(DateOnly.TryParse(ticketEvent.EventDate, out var eventDate) == false)
+            {
+                throw new ArgumentException("Invalid event date format.", nameof(ticketEvent.EventDate));
+            }
+
+            if(TimeOnly.TryParse(ticketEvent.EventTime, out var eventTime) == false)
+            {
+                throw new ArgumentException("Invalid event time format.", nameof(ticketEvent.EventTime));
+            }
 
             ticket.EventName = ticketEvent.EventName;
-            ticket.EventDate = DateOnly.Parse(ticketEvent.EventDate);
-            ticket.EventTime = TimeOnly.Parse(ticketEvent.EventTime);
+            ticket.EventDate = eventDate;
+            ticket.EventTime = eventTime;
             ticket.EventCategoryName = ticketEvent.EventCategoryName;
             ticket.EventLocation = ticketEvent.EventLocation;
 
