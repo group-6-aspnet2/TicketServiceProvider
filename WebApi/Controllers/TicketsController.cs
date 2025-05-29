@@ -1,6 +1,6 @@
 ﻿using Business.Services;
-using Data.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace WebApi.Controllers
 {
@@ -11,6 +11,9 @@ namespace WebApi.Controllers
         private readonly ITicketService _ticketService = ticketService;
 
         [HttpGet]
+        [SwaggerOperation(Summary = "Returns a list of tickets")]
+        [SwaggerResponse(200, "List of tickets returned successfully")]
+        [SwaggerResponse(500, "An error occurred while processing the request")]
         public async Task<IActionResult> GetAllTickets()
         {
             try
@@ -30,6 +33,10 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("user/{userId}")]
+        [SwaggerOperation(Summary = "Returns a list of tickets for a specific user")]
+        [SwaggerResponse(200, "List of tickets for the user returned successfully")]
+        [SwaggerResponse(400, "Invalid user ID provided")]
+        [SwaggerResponse(500, "An error occurred while processing the request")]
         public async Task<IActionResult> GetTicketsByUserId(string userId)
         {
             try
@@ -51,6 +58,10 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("event/{eventId}")]
+        [SwaggerOperation(Summary = "Returns a list of tickets for a specific event")]
+        [SwaggerResponse(200, "List of tickets for the event returned successfully")]
+        [SwaggerResponse(400, "Invalid event ID provided")]
+        [SwaggerResponse(500, "An error occurred while processing the request")]
         public async Task<IActionResult> GetTicketsByEventId(string eventId)
         {
             try
@@ -72,6 +83,10 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("booking/{bookingId}")]
+        [SwaggerOperation(Summary = "Returns a list of tickets for a specific booking")]
+        [SwaggerResponse(200, "List of tickets for the booking returned successfully")]
+        [SwaggerResponse(400, "Invalid booking ID provided")]
+        [SwaggerResponse(500, "An error occurred while processing the request")]
         public async Task<IActionResult> GetTicketsByBookingId(string bookingId)
         {
             try
